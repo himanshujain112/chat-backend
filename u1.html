@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>User 1 Chat</title>
+	</head>
+	<body>
+		<h2>User 1</h2>
+
+		<!-- Token input -->
+		<label for="token">Enter Token: </label>
+		<input type="text" id="token" placeholder="Enter your JWT token" />
+		<button onclick="connectWebSocket()">Connect</button>
+
+		<h3>Chat</h3>
+		<form onsubmit="sendMessage(event)">
+			<input type="text" id="to" placeholder="To User ID" />
+			<input type="text" id="msg" placeholder="Message" />
+			<button>Send</button>
+		</form>
+
+		<ul id="messages"></ul>
+
+		<script>
+			let ws;
+
+			// Function to establish WebSocket connection
+			function connectWebSocket() {
+				const token = document.getElementById("token").value;
+				if (!token) {
+					alert("Please enter a valid token");
+					return;
+				}
+
+				// Create WebSocket connection with the provided token
+				ws = new WebSocket(`ws://localhost:3000/ws?token=${token}`);
+
+				// Event listener for incoming messages
+				ws.onmessage = function (event) {
+					const li = document.createElement("li");
+					li.textContent = event.data;
+					document.getElementById("messages").appendChild(li);
+				};
+
+				// Log WebSocket events
+				ws.onopen = () => console.log("Connected to WebSocket");
+				ws.onerror = (err) => console.error("WebSocket error", err);
+				ws.onclose = (e) => console.log("WebSocket closed", e);
+			}
+
+			// Function to send a message
+			function sendMessage(event) {
+				event.preventDefault();
+				const to = document.getElementById("to").value;
+				const msg = document.getElementById("msg").value;
+
+				if (ws && ws.readyState === WebSocket.OPEN) {
+					ws.send(JSON.stringify({ to, message: msg }));
+				} else {
+					alert("WebSocket is not connected.");
+				}
+			}
+		</script>
+	</body>
+</html>
